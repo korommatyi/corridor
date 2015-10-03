@@ -17,6 +17,7 @@
             [lein-figwheel "0.4.0"]]
 
   :source-paths ["src/clj"]
+  :test-paths ["test/clj"]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
