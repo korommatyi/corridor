@@ -3,62 +3,48 @@
             [ring.mock.request :as mock]
             [corridor.board :refer :all]
             [clojure.set :refer [difference]])
-  (:import (corridor.board WallCoordinate Position Board)))
+  (:import (corridor.board WallCoordinate)))
 
-(deftest test-neighbors
-  (testing "neighbors of (1, 1)"
-    (let [output (neighbors 1 1)]
-      (is (= [[1 2] [2 1]] (vec output)))))
+(deftest test-new-board
+  (testing "neighbors of [1 1]"
+    (let [board (new-board)
+          ns (vec (connections-of board [1 1]))]
+      (is (= [[1 2] [2 1]] ns))))
 
-  (testing "neighbors of (2, 2)"
-    (let [output (neighbors 2 2)]
-      (is (= [[1 2] [2 1] [2 3] [3 2]] (vec output))))))
+  (testing "neighbors of [2 2]"
+    (let [board (new-board)
+          ns (vec (connections-of board [2 2]))]
+      (is (= [[1 2] [2 1] [2 3] [3 2]] ns)))))
 
-(deftest test-blocks
-  (testing "wall [1 1 :horizontal] blocks [1 1] to [1 2]"
-    (let [output (blocks? [1 1] [1 2] (WallCoordinate. 1 1 :horizontal))]
-      (is (= true (boolean output)))))
+(deftest test-move
+  (testing "move player 1 to [3 3]"
+    (let [board (new-board)
+          altered-board (move board :player1 [3 3])]
+      (is (= [3 3] (:figure (:player1 altered-board)))))))
 
-  (testing "wall [1 1 :horizontal] blocks [2 1] to [2 2]"
-    (let [output (blocks? [2 1] [2 2] (WallCoordinate. 1 1 :horizontal))]
-      (is (= true (boolean output)))))
+(deftest test-place-wall
+  (testing "place horizontal wall to [2 2]"
+    (let [board (new-board)
+          altered-board (place-wall board :player1 (WallCoordinate. 2 2 :horizontal))
+          ns2-2 (vec (connections-of altered-board [2 2]))
+          ns3-2 (vec (connections-of altered-board [3 2]))
+          ns2-3 (vec (connections-of altered-board [2 3]))
+          ns3-3 (vec (connections-of altered-board [3 3]))]
+      (is (= [[1 2] [2 1] [3 2]] ns2-2))
+      (is (= [[2 2] [3 1] [4 2]] ns3-2))
+      (is (= [[1 3] [2 4] [3 3]] ns2-3))
+      (is (= [[2 3] [3 4] [4 3]] ns3-3))
+      (is (= 1 (count (:walls (:player1 altered-board)))))))
 
-  (testing "wall [1 1 :vertical] blocks [1 1] [2 1]"
-    (let [output (blocks? [1 1] [2 1] (WallCoordinate. 1 1 :vertical))]
-      (is (= true (boolean output)))))
-
-  (testing "wall [1 1 :vertical] blocks [1 2] [2 2]"
-    (let [output (blocks? [1 2] [2 2] (WallCoordinate. 1 1 :vertical))]
-      (is (= true (boolean output)))))
-
-  (testing "wall [1 1 :vertical] does not block [1 1] to [1 2]"
-    (let [output (blocks? [1 1] [1 2] (WallCoordinate. 1 1 :vertical))]
-      (is (= false (boolean output)))))
-
-  (testing "wall [1 1 :horizontal] does not block [1 1] [2 1]"
-    (let [output (blocks? [1 1] [2 1] (WallCoordinate. 1 1 :horizontal))]
-      (is (= false (boolean output)))))
-
-  (testing "wall [1 1 :horizontal] does not block [3 1] to [3 2]"
-    (let [output (blocks? [3 1] [3 2] (WallCoordinate. 1 1 :horizontal))]
-      (is (= false (boolean output)))))
-
-  (testing "wall [1 1 :vertical] does not block [3 1] [3 2]"
-    (let [output (blocks? [3 1] [3 2] (WallCoordinate. 1 1 :vertical))]
-      (is (= false (boolean output)))))
-  )
-
-(deftest test-moves
-  (testing "moves"
-    (let [position1 (Position. [5 5] [(WallCoordinate. 5 5 :horizontal)])
-          position2 (Position. [1 1] [(WallCoordinate. 2 2 :vertical)])
-          board (Board. position1 position2)]
-      (is (= [[4 5] [5 4] [6 5]] (vec (moves :player1 board)))))))
-
-(deftest test-wall-placements
-  (testing "wall-palcements"
-    (let [e (difference all-possible-wall-positions #{[2 2] [5 5]})
-          position1 (Position. [5 5] [(WallCoordinate. 5 5 :horizontal)])
-          position2 (Position. [1 1] [(WallCoordinate. 2 2 :vertical)])
-          board (Board. position1 position2)]
-      (is (= e (wall-placements :player1 board))))))
+  (testing "place vertical wall to [2 2]"
+    (let [board (new-board)
+          altered-board (place-wall board :player1 (WallCoordinate. 2 2 :vertical))
+          ns2-2 (vec (connections-of altered-board [2 2]))
+          ns3-2 (vec (connections-of altered-board [3 2]))
+          ns2-3 (vec (connections-of altered-board [2 3]))
+          ns3-3 (vec (connections-of altered-board [3 3]))]
+      (is (= [[1 2] [2 1] [2 3]] ns2-2))
+      (is (= [[3 1] [3 3] [4 2]] ns3-2))
+      (is (= [[1 3] [2 2] [2 4]] ns2-3))
+      (is (= [[3 2] [3 4] [4 3]] ns3-3))
+      (is (= 1 (count (:walls (:player1 altered-board))))))))
