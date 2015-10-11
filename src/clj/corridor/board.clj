@@ -110,3 +110,10 @@
        (update :turn inc)
        (update-in [player :walls] (fn [v] (conj v wall-coord)))
        (separate-by-wall wall-coord))))
+
+
+(defn blocks-path? [wall path]
+  (let [steps (map set (partition 2 1 path))
+        blocker (set (map set (which-pairs-does-it-separate wall)))
+        step-blocked? (fn [step] (blocker step))]
+    (some step-blocked? steps)))
