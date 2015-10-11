@@ -18,33 +18,30 @@
 
 (deftest test-move
   (testing "move player 1 to [3 3]"
-    (let [board (new-board)
-          altered-board (move board :player1 [3 3])]
-      (is (= [3 3] (:figure (:player1 altered-board)))))))
+    (let [board (move (new-board) [3 3])]
+      (is (= [3 3] (:figure (:player1 board)))))))
 
 (deftest test-place-wall
   (testing "place horizontal wall to [2 2]"
-    (let [board (new-board)
-          altered-board (place-wall board :player1 (WallCoordinate. 2 2 :horizontal))
-          ns2-2 (vec (connections-of altered-board [2 2]))
-          ns3-2 (vec (connections-of altered-board [3 2]))
-          ns2-3 (vec (connections-of altered-board [2 3]))
-          ns3-3 (vec (connections-of altered-board [3 3]))]
+    (let [board (place-wall (new-board) (WallCoordinate. 2 2 :horizontal))
+          ns2-2 (vec (connections-of board [2 2]))
+          ns3-2 (vec (connections-of board [3 2]))
+          ns2-3 (vec (connections-of board [2 3]))
+          ns3-3 (vec (connections-of board [3 3]))]
       (is (= [[1 2] [2 1] [3 2]] ns2-2))
       (is (= [[2 2] [3 1] [4 2]] ns3-2))
       (is (= [[1 3] [2 4] [3 3]] ns2-3))
       (is (= [[2 3] [3 4] [4 3]] ns3-3))
-      (is (= 1 (count (:walls (:player1 altered-board)))))))
+      (is (= 1 (count (:walls (:player1 board)))))))
 
   (testing "place vertical wall to [2 2]"
-    (let [board (new-board)
-          altered-board (place-wall board :player1 (WallCoordinate. 2 2 :vertical))
-          ns2-2 (vec (connections-of altered-board [2 2]))
-          ns3-2 (vec (connections-of altered-board [3 2]))
-          ns2-3 (vec (connections-of altered-board [2 3]))
-          ns3-3 (vec (connections-of altered-board [3 3]))]
+    (let [board (place-wall (new-board) (WallCoordinate. 2 2 :vertical))
+          ns2-2 (vec (connections-of board [2 2]))
+          ns3-2 (vec (connections-of board [3 2]))
+          ns2-3 (vec (connections-of board [2 3]))
+          ns3-3 (vec (connections-of board [3 3]))]
       (is (= [[1 2] [2 1] [2 3]] ns2-2))
       (is (= [[3 1] [3 3] [4 2]] ns3-2))
       (is (= [[1 3] [2 2] [2 4]] ns2-3))
       (is (= [[3 2] [3 4] [4 3]] ns3-3))
-      (is (= 1 (count (:walls (:player1 altered-board))))))))
+      (is (= 1 (count (:walls (:player1 board))))))))
