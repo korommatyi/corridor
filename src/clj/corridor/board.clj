@@ -53,9 +53,7 @@
 
 
 (defn move
-  ([board coord]
-   (let [player (whose-turn? board)]
-     (move board player coord)))
+  ([board coord] (move board (whose-turn? board) coord))
 
   ([board player coord]
    (-> board
@@ -63,9 +61,7 @@
        (update-in [player :figure] (fn [_] coord)))))
 
 (defn possible-moves
-  ([board]
-   (let [player (whose-turn? board)]
-     (possible-moves board player)))
+  ([board] (possible-moves board (whose-turn? board)))
 
   ([board player]
    (let [this-pos (:figure (player board))
@@ -101,9 +97,7 @@
         (close-connection c d))))
 
 (defn place-wall
-  ([board wall-coord]
-   (let [player (whose-turn? board)]
-     (place-wall board player wall-coord)))
+  ([board wall-coord] (place-wall board (whose-turn? board) wall-coord))
 
   ([board player wall-coord]
    (-> board

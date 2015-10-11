@@ -58,10 +58,11 @@
       (is (= [[6 2] [5 3] [4 2] [4 1] [6 1]] moves)))))
 
 (deftest test-blocks-path
-  (testing "Wall [2 1 :vertical] blocks path [1 1] -> [2 1] -> [3 1]"
+  (testing "Wall [2 1 :vertical] blocks path [1 1] <-> [2 1] <-> [3 1]"
     (let [wall (WallCoordinate. 2 1 :vertical)
           path [[1 1] [2 1] [3 1]]]
-      (is (boolean (blocks-path? wall path)))))
+      (is (boolean (blocks-path? wall path)))
+      (is (boolean (blocks-path? wall (reverse path))))))
 
   (testing "Wall [2 1 :horizontal] does not block path [1 1] -> [2 1] -> [3 1]"
     (let [wall (WallCoordinate. 2 1 :horizontal)
