@@ -29,8 +29,8 @@
   (let [center (+ 1 (/ (- board-size 1) 2))]
     (Board.
       0
-      (Position. [1 center] [])
-      (Position. [board-size center] [])
+      (Position. [center 1] [])
+      (Position. [center board-size] [])
       (into {} (for [x (range 1 (+ 1 board-size))
                      y (range 1 (+ 1 board-size))]
                  [[x y] (cell x y)])))))
@@ -48,6 +48,9 @@
 (defn- whose-turn? [board]
   (if (even? (:turn board)) :player1 :player2))
 
+(def other-player {:player1 :player2
+                   :player2 :player1})
+
 
 (defn move
   ([board coord]
@@ -58,6 +61,21 @@
    (-> board
        (update :turn inc)
        (update-in [player :figure] (fn [_] coord)))))
+
+(defn possible-moves
+  ([board]
+   (let [player (whose-turn? board)]
+     (possible-moves board player)))
+
+  ([board player]
+   (let [this-pos (:figure (player board))
+         other-pos (:figure ((other-player player) board))
+         this-neighbors (connections-of board this-pos)]
+     (if-not (some #{other-pos} this-neighbors)
+       this-neighbors
+       (let [other-neighbors (connections-of board other-pos)
+             union (into this-neighbors other-neighbors)]
+         (filter #(not (#{this-pos other-pos} %)) union))))))
 
 
 (defn- which-pairs-does-it-separate [{:keys [x y alignment]}]
@@ -74,7 +92,7 @@
       (update-in [:cells cell1 :neighbors] (fn [v] (remove #(= cell2 %) v)))
       (update-in [:cells cell2 :neighbors] (fn [v] (remove #(= cell1 %) v)))))
 
-(defn- separate [board wall-coord]
+(defn- separate-by-wall [board wall-coord]
   (let [[p1 p2] (which-pairs-does-it-separate wall-coord)
         [a b] p1
         [c d] p2]
@@ -91,4 +109,4 @@
    (-> board
        (update :turn inc)
        (update-in [player :walls] (fn [v] (conj v wall-coord)))
-       (separate wall-coord))))
+       (separate-by-wall wall-coord))))

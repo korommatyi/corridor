@@ -45,3 +45,14 @@
       (is (= [[1 3] [2 2] [2 4]] ns2-3))
       (is (= [[3 2] [3 4] [4 3]] ns3-3))
       (is (= 1 (count (:walls (:player1 board))))))))
+
+(deftest test-possible-moves
+  (testing "possible moves on a new board"
+    (let [board (new-board)
+          moves (vec (possible-moves board :player1))]
+      (is (= [[4 1] [5 2] [6 1]] moves))))
+
+  (testing "possible moves from [5 1] if opponent stand on [5 2]"
+    (let [board (move (new-board) :player2 [5 2])
+          moves (vec (possible-moves board :player1))]
+      (is (= [[6 2] [5 3] [4 2] [4 1] [6 1]] moves)))))
