@@ -10,7 +10,8 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [sablono "0.3.6"]
                  [org.omcljs/om "0.9.0"]
-                 [com.andrewmcveigh/cljs-time "0.3.13"]]
+                 [com.andrewmcveigh/cljs-time "0.3.13"]
+                 [org.clojure/data.priority-map "0.0.7"]]
 
   :plugins [[lein-ring "0.9.7"]
             [lein-cljsbuild "1.1.0"]

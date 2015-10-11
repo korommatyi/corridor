@@ -1,6 +1,7 @@
 (ns corridor.board
   (:import (java.lang Math))
-  (:require [clojure.set :refer [difference]]))
+  (:require [clojure.set :refer [difference]]
+            [clojure.data.priority-map :refer [priority-map]]))
 
 (def board-size 9)  ; coordinates run from 1 to board-size
 (def num-of-walls 10)
@@ -111,3 +112,28 @@
         blocker (set (map set (which-pairs-does-it-separate wall)))
         step-blocked? (fn [step] (blocker step))]
     (some step-blocked? steps)))
+
+(defn- construct-path [from to parent]
+  (loop [path []
+         current to]
+    (let [path' (conj path current)]
+      (if (= from current)
+        (reverse path')
+        (recur path' (parent current))))))
+
+(defn path [board from-coord to-y]
+  (let [priority (fn [[_ y]] (Math/abs (- y to-y)))
+        cells (:cells board)]
+    (loop [finished #{}
+           reached (priority-map from-coord (priority from-coord))
+           parent {}]
+      (if-let [[current p] (peek reached)]
+        (if (= 0 p)
+          (construct-path from-coord current parent)
+          (let [neighbors (:neighbors (cells current))
+                new-nodes (filter #(not (or (finished %) (reached %))) neighbors)
+                finished' (conj finished current)
+                reached' (into (pop reached) (map #(identity [% (priority %)]) new-nodes))
+                parent' (into parent (map #(identity [% current]) new-nodes))]
+            (recur finished' reached' parent')))
+        nil))))

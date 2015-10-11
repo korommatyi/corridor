@@ -68,3 +68,20 @@
     (let [wall (WallCoordinate. 2 1 :horizontal)
           path [[1 1] [2 1] [3 1]]]
       (is (not (boolean (blocks-path? wall path)))))))
+
+(deftest test-path
+  (testing "Path from [1 1] to [_ 9] on an empty board"
+    (let [p (path (new-board) [1 1] 9)]
+      (is (= [[1 1] [1 2] [1 3] [1 4] [1 5] [1 6] [1 7] [1 8] [1 9]] p))))
+
+  (testing "Path from [1 1] to [_ 9] on a board with walls [[1 1 :horizontal]]"
+    (let [board (place-wall (new-board) (WallCoordinate. 1 1 :horizontal))
+          p (path board [1 1] 9)]
+      (is (= [[1 1] [2 1] [3 1] [3 2] [3 3] [3 4] [3 5] [3 6] [3 7] [3 8] [3 9]] p))))
+
+  (testing "No path from [1 1] to [_ 9] on a board with walls [[1 1 :horizontal] [2 1 :vertical]]"
+    (let [board (-> (new-board)
+                    (place-wall (WallCoordinate. 1 1 :horizontal))
+                    (place-wall (WallCoordinate. 2 1 :vertical)))
+          p (path board [1 1] 9)]
+      (is (nil? p)))))
