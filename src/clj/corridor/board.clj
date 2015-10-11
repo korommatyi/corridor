@@ -26,14 +26,17 @@
 (defn- cell [x y]
   (Cell. x y (neighbors x y)))
 
+(def cell-range (range 1 (+ 1 board-size)))
+(def wall-range (range 1 board-size))
+
 (defn new-board []
   (let [center (+ 1 (/ (- board-size 1) 2))]
     (Board.
       0
       (Position. [center 1] [])
       (Position. [center board-size] [])
-      (into {} (for [x (range 1 (+ 1 board-size))
-                     y (range 1 (+ 1 board-size))]
+      (into {} (for [x cell-range
+                     y cell-range]
                  [[x y] (cell x y)])))))
 
 
@@ -107,12 +110,6 @@
        (separate-by-wall wall-coord))))
 
 
-(defn blocks-path? [wall path]
-  (let [steps (map set (partition 2 1 path))
-        blocker (set (map set (which-pairs-does-it-separate wall)))
-        step-blocked? (fn [step] (blocker step))]
-    (some step-blocked? steps)))
-
 (defn- construct-path [from to parent]
   (loop [path []
          current to]
@@ -121,19 +118,72 @@
         (reverse path')
         (recur path' (parent current))))))
 
-(defn path [board from-coord to-y]
+(defn get-path [board from-coord to-y]
   (let [priority (fn [[_ y]] (Math/abs (- y to-y)))
         cells (:cells board)]
     (loop [finished #{}
            reached (priority-map from-coord (priority from-coord))
            parent {}]
-      (if-let [[current p] (peek reached)]
+      (if-let [[active-node p] (peek reached)]
         (if (= 0 p)
-          (construct-path from-coord current parent)
-          (let [neighbors (:neighbors (cells current))
+          (construct-path from-coord active-node parent)
+          (let [neighbors (:neighbors (cells active-node))
                 new-nodes (filter #(not (or (finished %) (reached %))) neighbors)
-                finished' (conj finished current)
+                finished' (conj finished active-node)
                 reached' (into (pop reached) (map #(identity [% (priority %)]) new-nodes))
-                parent' (into parent (map #(identity [% current]) new-nodes))]
+                parent' (into parent (map #(identity [% active-node]) new-nodes))]
             (recur finished' reached' parent')))
         nil))))
+
+(defn- wall-on-righ [x y] (WallCoordinate. (+ x 1) y :horizontal))
+(defn- wall-on-left [x y] (WallCoordinate. (- x 1) y :horizontal))
+(defn- wall-below [x y] (WallCoordinate. x (- y 1) :vertical))
+(defn- wall-above [x y] (WallCoordinate. x (+ y 1) :vertical))
+
+(defn- walls-physically-blocking [x y alignment]
+  (let [walls-on-same-place [(WallCoordinate. x y :vertical) (WallCoordinate. x y :horizontal)]]
+    (if (= alignment :horizontal)
+      (into walls-on-same-place [(wall-on-left x y) (wall-on-righ x y)])
+      (into walls-on-same-place [(wall-above x y) (wall-below x y)]))))
+
+(defn- physically-possible-walls [board]
+  (let [existing-walls (set (walls-on-board board))]
+    (for [x wall-range
+          y wall-range
+          alignment [:horizontal :vertical]
+          :let [blockers (walls-physically-blocking x y alignment)]
+          :when (every? #(not (existing-walls %)) blockers)]
+      (WallCoordinate. x y alignment))))
+
+(defn blocks-path? [wall path]
+  (let [steps (map set (partition 2 1 path))
+        blocker (set (map set (which-pairs-does-it-separate wall)))
+        step-blocked? (fn [step] (blocker step))]
+    (some step-blocked? steps)))
+
+(defn- does-not-block-path? [wall path]
+  (if (not (blocks-path? wall path)) path))
+
+(defn- get-independent-path [from to-y previous-paths-to-y wall board]
+  (if-let [path (some #(does-not-block-path? wall %) previous-paths-to-y)]
+    path
+    (get-path (place-wall board wall) from to-y)))
+
+(defn valid-walls [board]
+  (let [walls (vec (physically-possible-walls board))
+        p1 (:figure (:player1 board))
+        p2 (:figure (:player2 board))]
+    ;this will be ugly
+    (loop [i 0
+           paths-to-top #{}
+           paths-to-bottom #{}
+           ok-walls []]
+      (if (= (count walls) i)
+        (do (println paths-to-top)
+          ok-walls)
+        (let [wall (walls i)
+              path1 (get-independent-path p1 9 paths-to-top wall board)
+              path2 (get-independent-path p2 1 paths-to-bottom wall board)]
+          (if (and path1 path2)
+            (recur (inc i) (conj paths-to-top path1) (conj paths-to-bottom path2) (conj ok-walls wall))
+            (recur (inc i) paths-to-top paths-to-bottom ok-walls)))))))

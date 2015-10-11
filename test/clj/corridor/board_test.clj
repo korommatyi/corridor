@@ -71,17 +71,48 @@
 
 (deftest test-path
   (testing "Path from [1 1] to [_ 9] on an empty board"
-    (let [p (path (new-board) [1 1] 9)]
+    (let [p (get-path (new-board) [1 1] 9)]
       (is (= [[1 1] [1 2] [1 3] [1 4] [1 5] [1 6] [1 7] [1 8] [1 9]] p))))
 
   (testing "Path from [1 1] to [_ 9] on a board with walls [[1 1 :horizontal]]"
     (let [board (place-wall (new-board) (WallCoordinate. 1 1 :horizontal))
-          p (path board [1 1] 9)]
+          p (get-path board [1 1] 9)]
       (is (= [[1 1] [2 1] [3 1] [3 2] [3 3] [3 4] [3 5] [3 6] [3 7] [3 8] [3 9]] p))))
 
   (testing "No path from [1 1] to [_ 9] on a board with walls [[1 1 :horizontal] [2 1 :vertical]]"
     (let [board (-> (new-board)
                     (place-wall (WallCoordinate. 1 1 :horizontal))
                     (place-wall (WallCoordinate. 2 1 :vertical)))
-          p (path board [1 1] 9)]
+          p (get-path board [1 1] 9)]
       (is (nil? p)))))
+
+(deftest test-valid-walls
+  (testing "Every wall is valid on an empty board"
+    (let [walls (vec (valid-walls (new-board)))]
+      (is (= 128 (count walls)))))
+
+  (testing "Can not place wall on existing one."
+    (let [board (place-wall (new-board) (WallCoordinate. 8 1 :horizontal))
+          walls (set (valid-walls board))]
+      (is (= 125 (count walls)))
+      (is (nil? (walls (WallCoordinate. 8 1 :horizontal))))
+      (is (nil? (walls (WallCoordinate. 8 1 :vertical))))
+      (is (nil? (walls (WallCoordinate. 7 1 :horizontal))))))
+
+  (testing "Can not place wall on existing one."
+    (let [board (place-wall (new-board) (WallCoordinate. 2 2 :vertical))
+          walls (set (valid-walls board))]
+      (is (= 124 (count walls)))
+      (is (nil? (walls (WallCoordinate. 2 2 :horizontal))))
+      (is (nil? (walls (WallCoordinate. 2 2 :vertical))))
+      (is (nil? (walls (WallCoordinate. 2 3 :vertical))))
+      (is (nil? (walls (WallCoordinate. 2 1 :vertical))))))
+
+  (testing "Can not place wall that separates a player from the goal"
+    (let [board (-> (new-board)
+                    (place-wall (WallCoordinate. 1 1 :horizontal))
+                    (place-wall (WallCoordinate. 3 1 :horizontal))
+                    (place-wall (WallCoordinate. 5 1 :horizontal)))
+          walls (set (valid-walls board))]
+      (is (= 118 (count walls)))
+      (is (nil? (walls (WallCoordinate. 6 1 :vertical)))))))
