@@ -169,21 +169,19 @@
     path
     (get-path (place-wall board wall) from to-y)))
 
+(defn- wall-checker [board figure goal]
+  (let [cached-paths (atom #{})]
+    (fn [wall]
+      (let [path (get-independent-path figure goal @cached-paths wall board)]
+        (if path
+          (do
+            (swap! cached-paths conj path)
+            wall))))))
+
 (defn valid-walls [board]
-  (let [walls (vec (physically-possible-walls board))
-        p1 (:figure (:player1 board))
-        p2 (:figure (:player2 board))]
-    ;this will be ugly
-    (loop [i 0
-           paths-to-top #{}
-           paths-to-bottom #{}
-           ok-walls []]
-      (if (= (count walls) i)
-        (do (println paths-to-top)
-          ok-walls)
-        (let [wall (walls i)
-              path1 (get-independent-path p1 9 paths-to-top wall board)
-              path2 (get-independent-path p2 1 paths-to-bottom wall board)]
-          (if (and path1 path2)
-            (recur (inc i) (conj paths-to-top path1) (conj paths-to-bottom path2) (conj ok-walls wall))
-            (recur (inc i) paths-to-top paths-to-bottom ok-walls)))))))
+  (let [p1 (:figure (:player1 board))
+        p2 (:figure (:player2 board))
+        walls (vec (physically-possible-walls board))
+        leaves-possible-to-reach-top? (wall-checker board p1 9)
+        levaes-possible-to-reach-bottom? (wall-checker board p2 1)]
+    (filter #(and (leaves-possible-to-reach-top? %) (levaes-possible-to-reach-bottom? %)) walls)))
