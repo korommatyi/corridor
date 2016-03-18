@@ -6,12 +6,14 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [compojure "1.4.0"]
                  [ring/ring-defaults "0.1.2"]
+                 [ring "1.4.0"]
                  [org.clojure/clojurescript "1.7.122"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [sablono "0.3.6"]
                  [org.omcljs/om "0.9.0"]
                  [com.andrewmcveigh/cljs-time "0.3.13"]
-                 [org.clojure/data.priority-map "0.0.7"]]
+                 [org.clojure/data.priority-map "0.0.7"]
+                 [http-kit "2.1.18"]]
 
   :plugins [[lein-ring "0.9.7"]
             [lein-cljsbuild "1.1.0"]
@@ -81,4 +83,5 @@
                                   [ring-mock "0.1.5"]]
                    }
              }
+  :main corridor.handler
   )
