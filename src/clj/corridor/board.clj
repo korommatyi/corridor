@@ -46,10 +46,10 @@
 (defn- walls-on-board [board]
   (concat (:walls (:player1 board)) (:walls (:player2 board))))
 
-(defn- can-place-wall? [board player]
+(defn can-place-wall? [board player]
   (>= num-of-walls (count (:walls (player board)))))
 
-(defn- whose-turn? [board]
+(defn whose-turn? [board]
   (if (even? (:turn board)) :player1 :player2))
 
 (def other-player {:player1 :player2

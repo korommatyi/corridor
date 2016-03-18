@@ -1,6 +1,5 @@
 (ns corridor.board-test
   (:require [clojure.test :refer :all]
-            [ring.mock.request :as mock]
             [corridor.board :refer :all]
             [clojure.set :refer [difference]])
   (:import (corridor.board WallCoordinate)))
